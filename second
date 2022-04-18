@@ -80,11 +80,19 @@ def check_solution(A, x, b):
 def main():
     matrix_size = int(input())
     A = [[0] * matrix_size for i in range(matrix_size)]
+    for i in range(matrix_size):
+        A[i][2]=A[i][1]*2+A[i][0]
+        A[i][3]=A[i][0]*2+A[i][1]
+
+
+
+
     generating_Matrix(matrix_size, A)
     A_copy = numpy.copy(A)
     P = [i for i in range(matrix_size)]
 
     rank=LU_decomosition(matrix_size, A, P)
+    print('ранг=',rank)
     U=numpy.copy(A)
     L=numpy.eye(matrix_size)
     for i in range(1,matrix_size):
@@ -109,7 +117,7 @@ def main():
     #print(numpy.matrix(b_copy))
     print("\n ОПРЕДЕЛИТЕЛЬ матрицы A:  \n ", determinant(A))
     print(" \n ****** Матрица b******: ")
-    
+
 
 
 
