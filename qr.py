@@ -33,10 +33,9 @@ A = np.matrix([
     for i in range(size)])
 Q, R = QR(A)
 print("A\n", A)
-print("Q>\n", Q)
-print("R>\n", R)
-print("QR>\n", np.dot(Q, R))
-print("QR>\n", np.dot(Q, np.transpose(Q)))
+print("Q=\n", Q)
+print("R=\n", R)
+print("QR=\n", np.dot(Q, R))
 #QRx=b
 #Rx=transpose(Q)*b
 #замена y=transpose(Q)*b
@@ -54,5 +53,4 @@ for i in range(x.shape[0]-2,-1,-1):
         x[i]-=x[j]*R[i,j]
     x[i]/=R[i,i]
 print('x=',x)
-print(np.linalg.solve(R,y))
-print(np.matmul(R,x)-y)
+print('x=',np.linalg.solve(R,y))
