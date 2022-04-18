@@ -72,7 +72,7 @@ def norma(matrix) -> float:
             temp_sum += abs(matrix[j][i])
         if (temp_sum > max_sum):
             max_sum = temp_sum
-    return temp_sum
+    return max_sum
 
 
 # вычисляем число обусловленности по A_1
