@@ -57,9 +57,11 @@ def solving_equation(A, b):
 def inverse_matrix(A, P):
     A_inverse = numpy.eye(len(A))
     E = numpy.eye(len(A))
+    PT=P.copy()
+    for i in range(len(P)):
+        PT[P[i]] = i
     for i in range(len(A)):
-        A_inverse[i] = solving_equation(A, E[P[i]])
-    A_inverse = transpose_matrix(A_inverse)
+        A_inverse[:, i] = solving_equation(A, E[PT[i]])
     return A_inverse
 
 
@@ -86,7 +88,7 @@ def determinant(A):
     detA = 1
     for i in range(len(A)):
         detA *= A[i][i]
-    #detA = detA if AMOUNT_PERMUTATIONS % 2 == 0 else -detA
+    detA = detA if AMOUNT_PERMUTATIONS % 2 == 0 else -detA
     return detA
 
 
