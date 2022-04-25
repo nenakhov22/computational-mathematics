@@ -16,9 +16,9 @@ def Jacobi(A, b, eps):
 
     x = np.transpose(np.matrix([0.0 for i in b]))
     norm = 1
-    i = 0
+    it = 0
     while (norm > eps):
-        i += 1
+        it += 1
         x_t = np.copy(x)
         for i in range(len(A)):
             s = 0
@@ -27,7 +27,7 @@ def Jacobi(A, b, eps):
             x_t[i] = (b[i] - s) / A[i, i]
         norm = np.sqrt(sum((x_t[i] - x[i]) ** 2 for i in range(len(A)))) #для условия остановки
         x = np.copy(x_t)
-    print('>>>> Posteriori', i, '\n')
+    print('>>>> Posteriori', it, '\n')
     return x
 
 
@@ -36,9 +36,9 @@ def seidel(A, b, eps):
     x = np.transpose(np.matrix([0.0 for i in b]))
 
     norm = 1
-    i = 0
+    it = 0
     while (norm > eps):
-        i += 1
+        it += 1
         x_t = np.copy(x)
         for i in range(n):
             s1 = sum([A[i, j] * x_t[j] for j in range(i)])
@@ -47,7 +47,7 @@ def seidel(A, b, eps):
 
         norm = np.sqrt(sum((x_t[i] - x[i]) ** 2 for i in range(n))) #для условия остановки
         x = x_t
-    print('>>>> Posteriori', i, '\n')
+    print('>>>> Posteriori', it, '\n')
     return x
 
 
@@ -86,7 +86,7 @@ try:
     B = -np.dot(LA.inv(D), (L + R))
     # print("||B|| = ",norma(B))
     x = Jacobi(A, b, eps * (1 - norma(B)) / norma(B))
-    print('>>>> Priory', np.ceil(math.log(10e-6 * (1 - norma(B)) / norma(c), norma(B))), '\n')
+    print('>>>> Priory', np.ceil(math.log(1e-7 * (1 - norma(B)) / norma(c), norma(B))), '\n')
     print("x (Jacobi) =\n", x)
     print("AX - b =\n", np.subtract(np.dot(A, x), b))
     print("\n||x^*-x|| = ", norma(LA.solve(A, b) - x))
@@ -95,7 +95,7 @@ try:
     q = norma(np.dot(LA.inv(LD), R))
 
     x = seidel(A, b, eps * (1 - q) / q)
-    print('>>>> Priory', np.ceil(math.log(10e-6 * abs(1 - q) / norma(c), q)), '\n')
+    print('>>>> Priory', np.ceil(math.log(1e-7 * abs(1 - q) / norma(c), q)), '\n')
 
     print("x (Seidel) =\n", x)
     print("AX - b =\n", np.subtract(np.dot(A, x), b))
