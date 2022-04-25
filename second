@@ -1,124 +1,153 @@
-import random
-import numpy
-
-AMOUNT_PERMUTATIONS = 0
-
-def transpose_matrix(A):
-    return [[A[j][i] for j in range(len(A))] for i in range(len(A[0]))]
-
-
-def generating_Matrix(n, matrix):
-    for i in range(n):
-        for j in range(n):
-            number_random = random.randint(0, 100)
-            matrix[i][j] = number_random
-    print("A = \n", end='')
-    print(numpy.matrix(matrix), '\n')
-
-
-def LU_decomosition(n, A, P):
-    global AMOUNT_PERMUTATIONS
-    #поиск опорного элемента
+import numpy as np
+import random as rand
+def LUPQ(A, n):
+    L = np.zeros((n, n))
+    U = np.copy(A)
+    P = np.eye(n)
+    Q = np.eye(n)
     rank = n
-    for i in range(len(A)):
-        pivot_value = 0
-        pivot = -1
-        for row in range(i, len(A)):
-            if abs(A[row][i]) > pivot_value:
-                pivot_value = A[row][i]
-                pivot = row
-        #меняем местами i - ю строку и строку с опорным элементом
-        if(pivot_value<1e-14):
-            rank=i
+    for i in range(n):
+        max = U[i][i]
+        for j in range(i, n):
+            for k in range(i, n):
+                if abs(U[j][k]) >= abs(max):
+                    max = U[j][k]
+                    index = j, k
+        if (abs(U[index[0], index[1]]) < 1e-14):
+            rank = i
             break
-        if pivot_value != 0:
-            AMOUNT_PERMUTATIONS+=1
-            P[i], P[pivot] = P[pivot], P[i]
-            A[i], A[pivot] = A[pivot], A[i]
-            for j in range(i + 1, len(A)):
-                A[j][i] /= A[i][i]
-                for k in range(i + 1, len(A)):
-                    A[j][k] -= A[j][i] * A[i][k]
-    print("Матрица после LUP разложения", '\n')
-    print(numpy.matrix(A))
-    return rank
+        if index[0] != i:
+            for j in range(n):
+                L[index[0]][j], L[i][j] = L[i][j], L[index[0]][j]
+                U[index[0]][j], U[i][j] = U[i][j], U[index[0]][j]
+                P[index[0]][j], P[i][j] = P[i][j], P[index[0]][j]
+        if index[1] != i:
+            for j in range(n):
+                L[j][index[1]], L[j][i] = L[j][i], L[j][index[1]]
+                U[j][index[1]], U[j][i] = U[j][i], U[j][index[1]]
+                Q[j][index[1]], Q[j][i] = Q[j][i], Q[j][index[1]]
 
-# решаем уравнение Ax = b
-#сюда фактические передаем не b а Pb
-def solving_equation(A, b,U,rank):
-    y = [0 for i in range(len(A))]
-    #(Ly=Pb,L-верхняя треугольная)
-    for i in range(len(y)):
-        y[i] = b[i] - sum([A[i][k] * y[k] for k in range(0, i)])
-    for i in range(U.shape[0]):
-        if (abs(U[i,i])<1e-12):
-            if(abs(y[i])>1e-12):
-                raise BaseException("решение не существует")
+        for j in range(i + 1, n):
+            L[j][i] = U[j][i] / U[i][i]
+            U[j] -= U[i] * L[j][i]
+    for j in range(n):
+        L[j][j] = 1
+    return L, U, P, Q, rank
+
+def Determinant(U, n):
+    det = 1
+    for i in range(n):
+        det *= U[i][i]
+    return det
+
+def Solution(L, U, P, Q, b, n, rank):
+    #Ly = Pb, Uz = y, x = Qz
+    y = np.matmul(P, b)
+    for i in range(1, n):
+        y[i] -= sum([L[i][k] * y[k] for k in range(0, i)])
+    z = y
+    for i in range(n):
+        if (abs(U[i, i]) < 1e-12):
+            if (abs(y[i]) > 1e-12):
+                raise BaseException("Решения не существует")
             else:
                 continue
-    x = [0 for i in range(len(A))]
-    #(Ux=y,U-нижняя треугольная)
-    for i in range(rank - 1, -1, -1):
-        x[i] = (y[i] - sum([A[i][k] * x[k] for k in range(i + 1, len(y))])) / A[i][i]
-    return x
+    for i in range(rank-1, -1, -1):
+        z[i] -= sum([U[i][k] * z[k] for k in range(n-1, i, -1)])
+        z[i] /= U[i][i]
+    return np.matmul(Q, z)
 
+def inverse(L, U, P, Q, n):
+    A_inverse = np.eye(n)
+    E = np.eye(n)
+    P1 = [i for i in range(n)]
+    for i in range(n):
+        A_inverse[i] = Solution(L, U, P, Q, E[P1[i]], n)
+    A_inverse = [[A_inverse[j][i] for j in range(n)] for i in range(n)]
+    return A_inverse
 
+def norma(A):
+    norma = 0
+    for i in range(A.shape[0]):
+        n = 0
+        for j in range(A.shape[1]): n += abs(A[i, j])
+        if (n > norma): norma = n
+    return norma
 
+def norma1(A, A1, n):
+    t = norma(A) * norma(A1)
+    return t
 
-
-# вычисляем определитель
-def determinant(A):
-    detA = 1
-    for i in range(len(A)):
-        detA *= A[i][i]
-    #detA = detA if AMOUNT_PERMUTATIONS % 2 == 0 else -detA
-    return detA
-
-def check_solution(A, x, b):
-    print("Ax - b =", numpy.subtract(numpy.matmul(A, x), b))
-
-def main():
-    matrix_size = int(input())
-    A = [[0] * matrix_size for i in range(matrix_size)]
-    for i in range(matrix_size):
-        A[i][2]=A[i][1]*2+A[i][0]
-        A[i][3]=A[i][0]*2+A[i][1]
-
-
-
-
-    generating_Matrix(matrix_size, A)
-    A_copy = numpy.copy(A)
-    P = [i for i in range(matrix_size)]
-
-    rank=LU_decomosition(matrix_size, A, P)
-    print('ранг=',rank)
-    U=numpy.copy(A)
-    L=numpy.eye(matrix_size)
-    for i in range(1,matrix_size):
-        for j in range(0,i):
-            L[i,j]=A[i][j]
-            U[i,j]=0
-    print('L=\n',L,'\nU=\n',U,';','\nLU=\n',numpy.matmul(L,U),'\nPA=\n',numpy.matmul([[1 if P[i]==j else 0 for j in range(matrix_size)] for i in range(matrix_size)],A_copy))
-    b = [random.randint(0, 100) for i in range(len(P))]
-    b_copy = b[:]
-    for i in range(len(P)):
-        b[i] = b_copy[P[i]]
-    try:
-        x = solving_equation(A, b,U,rank)
-        for i in range(len(b)):
-            print("b_{} = ".format(i + 1), b[i])
-        print("Решение матричного уравнения:  \n ")
-        for i in range(len(x)):
-            print("x_{} = ".format(i + 1), x[i])
-        print(check_solution(A_copy, x, b_copy))
-    except BaseException as e:
-        print(e)
-    #print(numpy.matrix(b_copy))
-    print("\n ОПРЕДЕЛИТЕЛЬ матрицы A:  \n ", determinant(A))
-    print(" \n ****** Матрица b******: ")
-
-
-
-
-main()
+# b = np.transpose(np.matrix([rand.randint(0,10) for i in range(n)]))
+# A = np.matrix([[rand.randint(0,10)+0.0 for j in range(n)] for i in range(n)])
+# n = np.random.randint(2, 5)
+# A = np.random.random((n, n))
+# b = np.array(np.random.sample(n))
+# A = np.array([[1.,1.,1.],[2.,2.,2.],[3.,3.,3.]], dtype=float)
+# n = 5
+# A = np.array([[1., 2., -1., 2.,-5.],
+#               [2., -3., 2, 4.,13.],
+#               [1., 2., -1., 2.,-5.],
+#               [-1., -6., 7, -3., 7.],
+#               [4., 9., -43., 1., 12.]], dtype=float)
+# b = [4.,1.,9.,2.,13.]
+# b = np.array(np.random.sample(n))
+# n = 4
+# A = np.array([[1., 2., -1., 2.],
+#               [2., -3., 2, 4.],
+#               [3., 1., 1., 6.],
+#               [-1., -6., 7, -3]], dtype=float)
+n = 5
+A = np.matrix([[rand.randint(0, 10) + 0.0 for j in range(n)] for i in range(n)])
+A[:, 2] = A[:, 1] * 2 + A[:, 0]
+A[:, 3] = A[:, 0] * 2 + A[:, 1]
+b = np.transpose(np.matrix([rand.randint(0, 10) for i in range(n)]))
+b = np.matmul(A, b)
+# n = 3
+# A = np.matrix([[65,22,31],[3,2,1],[3,2,1]], dtype=float)
+# b = np.matrix([5,0,6], dtype=float)
+# b = np.transpose(b)
+print('A =')
+print(A,'\n')
+L, U, P, Q, rank = LUPQ(A, n)
+print('LU =')
+LU = np.matmul(L, U)
+print(LU,'\n')
+print('L =')
+print(L,'\n')
+print('U =')
+print(U,'\n')
+print('rank =', rank,'\n')
+print('Перестановка строк P =')
+print(P,'\n')
+print('Перестановка столбцов Q =')
+print(Q,'\n')
+print('PAQ =')
+print(np.matmul(np.matmul(P,A), Q),'\n')
+print('LU - PAQ =')
+LUPAQ = np.matrix(np.matmul(L, U)) - np.matrix(np.matmul(P, np.matmul(A, Q)))
+if np.all(abs(LUPAQ)) < 10 ** (-14):
+    LUPAQ = np.zeros((n, n))
+print(LUPAQ,'\n')
+print('Определитель:')
+detA=Determinant(U, n)
+print(detA,'\n')
+try:
+    x = Solution(L, U, P, Q, b, n, rank)
+    print('Решение СЛАУ:')
+    print(x, '\n')
+    print("Ax - b =", np.subtract(np.matmul(A, x), b), '\n')
+except BaseException as e:
+    print(e)
+if (detA < 10 ** (-14)):
+    print("det A == 0 Обратной матрицы не существует")
+else:
+    A1 = np.array(inverse(LU, P, Q, n))
+    print('Обратная матрица')
+    print(A1, '\n')
+    print('Python обратная матрица')
+    print(np.linalg.inv(A), '\n')
+    print("A*invA=\n", np.matmul(A, A1), '\n')
+    print("invA*A=\n", np.matmul(A1, A), '\n')
+    print('Число обусловленности')
+    print(norma1(A, A1, n))
