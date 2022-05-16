@@ -116,6 +116,6 @@ def Newton(eps,k,hyb = False):
         
         if(delta<eps): return x
 start = time.time() * 1000
-x = Newton(1e-1,2,False)#точность, kая итерация, режим каждой kой
+x = Newton(1e-14,2,False)#точность, kая итерация, режим каждой kой
 print("\n%%%%% answer found in ",time.time() * 1000 - start,"millis with ",counter,"operations %%%%%\n")
 print("F(x) = ",F(x))
